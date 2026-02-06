@@ -2,7 +2,7 @@ name: Schedule Test (Hourly)
 
 on:
   schedule:
-    - cron: "45 * * * *"
+    - cron: "5/* * * * *"
   workflow_dispatch:
 
 jobs:

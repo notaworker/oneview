@@ -4,29 +4,27 @@ import re
 from bs4 import BeautifulSoup
 import os
 
-URL = "https://support.hpe.com/connect/s/product?language=en_US&cep=on&kmpmoid=5410258&tab=manualsAndGuides"
+URL = "https://portal-iam-ext-pro.it.hpe.com/hpesc/public/docDisplay?docId=sd00004082en_us&docLocale=en_US"
 OUTPUT_FILE = "latest_oneview.txt"
 
 def fetch_latest_version():
     r = requests.get(URL, timeout=20)
     r.raise_for_status()
-    soup = BeautifulSoup(r.text, "html.parser")
 
-    # Look for patterns like "HPE OneView 11.01"
-    versions = set()
-    for text in soup.stripped_strings:
-        matches = re.findall(r"HPE OneView\s+(\d+\.\d+)", text)
-        for m in matches:
-            versions.add(m)
+    soup = BeautifulSoup(r.text, "html.parser")
+    text = soup.get_text(" ", strip=True)
+
+    # Matches versions like 11.01, 10.2, 10.10, 8.60.02 etc.
+    versions = re.findall(r"\b\d{1,2}\.\d{1,2}(?:\.\d{1,2})?\b", text)
 
     if not versions:
-        raise Exception("Could not find any OneView versions on the page.")
+        raise Exception("No versions found in parsed HTML")
 
-    # Sort based on numeric version
-    def sort_key(v):
-        return tuple(map(int, v.split(".")))
+    # Convert to sortable numeric tuples
+    def version_key(v):
+        return tuple(int(x) for x in v.split("."))
 
-    latest = sorted(versions, key=sort_key, reverse=True)[0]
+    latest = sorted(versions, key=version_key, reverse=True)[0]
     return latest
 
 def main():

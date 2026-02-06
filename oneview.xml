@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+  <title>HPE OneView Latest Version</title>
+  <link>https://www.hpe.com</link>
+  <description>Daily feed of the newest HPE OneView release.</description>
+  <lastBuildDate>Fri, 06 Feb 2026 08:54:16 GMT</lastBuildDate>
+  <pubDate>Fri, 06 Feb 2026 08:54:16 GMT</pubDate>
+
+  <item>
+    <title>HPE OneView 24.04.3</title>
+    <description>Latest detected HPE OneView version: 24.04.3</description>
+    <link>https://www.hpe.com</link>
+    <guid>oneview-24.04.3</guid>
+    <pubDate>Fri, 06 Feb 2026 08:54:16 GMT</pubDate>
+  </item>
+
+</channel>
+</rss>

@@ -1,0 +1,12 @@
+name: Schedule Test (Hourly)
+
+on:
+  schedule:
+    - cron: "45 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Schedule fired: $(date -u) UTC"

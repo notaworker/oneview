@@ -1,36 +1,36 @@
-name: Daily OneView Version Check
+name: Daily OneView RSS Update
 
 on:
   schedule:
-    - cron: "0 5 * * *"   # 05:00 UTC = 06:00 CET
+    - cron: "0 5 * * *"   # runs daily at 05:00 UTC / 06:00 CET
   workflow_dispatch:
 
 jobs:
-  check-latest-version:
+  build-rss:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
+    - name: Checkout repo
       uses: actions/checkout@v4
 
-    - name: Set up Python
+    - name: Setup Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.x'
+        python-version: "3.x"
 
-    - name: Install Dependencies
+    - name: Install dependencies
       run: pip install requests beautifulsoup4
 
-    - name: Run Version Checker
-      run: python get_oneview_latest.py
+    - name: Generate RSS
+      run: python generate_oneview_rss.py
 
-    - name: Commit Changes
+    - name: Commit RSS if changed
       run: |
         if [[ -n "$(git status --porcelain)" ]]; then
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add latest_oneview.txt
-          git commit -m "Updated OneView latest version"
+          git add oneview.xml
+          git commit -m "Daily OneView RSS update"
           git push
         else
           echo "No changes to commit."

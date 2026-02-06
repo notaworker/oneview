@@ -6,19 +6,17 @@ from bs4 import BeautifulSoup
 
 RSS_FILE = "oneview.xml"
 
-# Primary and fallback public sources (both contain OneView 11.01)
 SOURCES = [
-    # Shows full OneView 11.x docs including 11.01
-    # (This page lists Release Notes 11.01, Support Matrix 11.01, etc.)
-    # Ref: turn17search22
+    # OneView docs page listing 11.01
     "https://www.hpe.com/psnow/resources/ebooks/a00113372en_us_v9/s_syn_doc-sm_rn.html",
-
-    # Synergy “What’s New” page explicitly mentions OneView 11.01
-    # Ref: turn13search15
+    # Synergy "What's New" page that explicitly lists OneView 11.01
     "https://support.hpe.com/docs/display/public/synergy-sw-release/Whats_New.html"
 ]
 
-VERSION_REGEX = re.compile(r"\b\d{1,2}\.\d{1,2}(?:\.\d{1,2})?\b")
+# Strict OneView-only version patterns
+VERSION_REGEX = re.compile(
+    r"\b(11\.\d{2}|10\.\d{1,2}|9\.\d{1,2}|8\.\d{1,2}|7\.\d{1,2}|6\.\d{1,2})\b"
+)
 
 def fetch_latest_version():
     versions = set()
@@ -34,10 +32,11 @@ def fetch_latest_version():
             pass
 
     if not versions:
-        raise RuntimeError("No versions found across any HPE source.")
+        raise RuntimeError("No OneView versions found.")
 
     def version_key(v):
-        return tuple(int(x) for x in v.split("."))
+        major, minor = v.split(".")
+        return int(major), int(minor)
 
     return sorted(versions, key=version_key, reverse=True)[0]
 
@@ -68,8 +67,9 @@ def generate_rss(latest_version):
 
 def main():
     latest = fetch_latest_version()
-    print(f"Detected latest version: {latest}")
+    print(f"Detected latest OneView version: {latest}")
     generate_rss(latest)
 
 if __name__ == "__main__":
     main()
+``

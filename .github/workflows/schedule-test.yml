@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  ping:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Print UTC time
-        run: echo "Schedule fired: $(date -u)"
+      - name: Say hello
+        run: echo "Hello from schedule test"

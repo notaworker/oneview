@@ -1,15 +1,12 @@
-name: Daily OneView RSS Update
+name: Hourly OneView RSS Update
 
-# IMPORTANT: allow workflow to push changes
 permissions:
   contents: write
 
 on:
   schedule:
-    # Runs every day at 05:00 UTC / 06:00 CET
-    - cron: "0 * * * *"
-  # Allow manual run
-  workflow_dispatch:
+    - cron: "0 * * * *"   # Run every hour
+  workflow_dispatch:       # Allow manual runs
 
 jobs:
   build-rss:
@@ -19,7 +16,8 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0   # needed for committing
+        fetch-depth: 0
+        persist-credentials: true
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -31,8 +29,7 @@ jobs:
         pip install requests beautifulsoup4
 
     - name: Generate OneView RSS feed
-      run: |
-        python generate_oneview_rss.py
+      run: python generate_oneview_rss.py
 
     - name: Commit updated RSS feed if changed
       run: |
@@ -41,7 +38,7 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add oneview.xml
-          git commit -m "Daily OneView RSS update"
+          git commit -m "Hourly OneView RSS update"
           git push
         else
           echo "No changes detected."

@@ -4,25 +4,25 @@ import re
 from bs4 import BeautifulSoup
 import os
 
-URL = "https://portal-iam-ext-pro.it.hpe.com/hpesc/public/docDisplay?docId=sd00004082en_us&docLocale=en_US"
+# PUBLIC, STATIC, GLOBALLY ACCESSIBLE PAGE
+URL = "https://www.hpe.com/psnow/resources/ebooks/a00113372en_us_v9/s_syn_doc-sm_rn.html"
 OUTPUT_FILE = "latest_oneview.txt"
 
 def fetch_latest_version():
     r = requests.get(URL, timeout=20)
     r.raise_for_status()
-
     soup = BeautifulSoup(r.text, "html.parser")
     text = soup.get_text(" ", strip=True)
 
-    # Matches versions like 11.01, 10.2, 10.10, 8.60.02 etc.
-    versions = re.findall(r"\b\d{1,2}\.\d{1,2}(?:\.\d{1,2})?\b", text)
+    # Matches 11.01, 10.2, 9.10, etc.
+    versions = re.findall(r"\b\d{1,2}\.\d{1,2}\b", text)
 
     if not versions:
         raise Exception("No versions found in parsed HTML")
 
-    # Convert to sortable numeric tuples
     def version_key(v):
-        return tuple(int(x) for x in v.split("."))
+        major, minor = v.split(".")
+        return (int(major), int(minor))
 
     latest = sorted(versions, key=version_key, reverse=True)[0]
     return latest

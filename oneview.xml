@@ -4,15 +4,18 @@
   <title>HPE OneView Latest Version</title>
   <link>https://www.hpe.com</link>
   <description>Daily feed of the newest HPE OneView release.</description>
-  <lastBuildDate>Fri, 06 Feb 2026 08:54:16 GMT</lastBuildDate>
-  <pubDate>Fri, 06 Feb 2026 08:54:16 GMT</pubDate>
+  <lastBuildDate>Fri, 06 Feb 2026 09:02:47 GMT</lastBuildDate>
+  <pubDate>Fri, 06 Feb 2026 09:02:47 GMT</pubDate>
 
   <item>
-    <title>HPE OneView 24.04.3</title>
-    <description>Latest detected HPE OneView version: 24.04.3</description>
+    <title>HPE OneView 11.01</title>
+    <description>
+      Latest detected HPE OneView version: 11.01.
+      Release date: Unknown release date.
+    </description>
     <link>https://www.hpe.com</link>
-    <guid>oneview-24.04.3</guid>
-    <pubDate>Fri, 06 Feb 2026 08:54:16 GMT</pubDate>
+    <guid>oneview-11.01</guid>
+    <pubDate>Fri, 06 Feb 2026 09:02:47 GMT</pubDate>
   </item>
 
 </channel>

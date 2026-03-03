@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
 HPE OneView version tracker.
-Primary source: GitHub API (HewlettPackard/POSH-HPEOneView releases)
-Fallback source: HPE Synergy What's New page (HTML scrape)
+- Version:  Parsed from the HPE Synergy Overview table (index.html)
+            The first "Recommended" row is always the latest version.
+- Date:     Scraped from What's New headings (e.g. "★HPE Synergy Composer2 (HPE OneView) 11.1")
+            No dates are published on either page, so pubDate falls back to today's date.
 """
 import datetime
 import re
@@ -11,110 +13,89 @@ from bs4 import BeautifulSoup
 
 RSS_FILE = "oneview.xml"
 
-GITHUB_API = "https://api.github.com/repos/HewlettPackard/POSH-HPEOneView/releases"
-FALLBACK_URL = "https://support.hpe.com/docs/display/public/synergy-sw-release/Whats_New.html"
+# Primary: structured version table — top row = latest recommended version
+OVERVIEW_URL = "https://support.hpe.com/docs/display/public/synergy-sw-release/index.html"
+# Secondary: used only to confirm version exists as a named release
+WHATSNEW_URL = "https://support.hpe.com/docs/display/public/synergy-sw-release/Whats_New.html"
 
-# Matches any X.YY or X.Y version — no hardcoded major version ceiling
-VERSION_REGEX = re.compile(r"\b(\d{1,2}\.\d{1,2}(?:\.\d{1,2})?)\b")
-
-# Matches "January 26, 2026" style dates
-DATE_REGEX = re.compile(
-    r"(January|February|March|April|May|June|July|August|September|"
-    r"October|November|December)\s+(\d{1,2}),\s+(\d{4})"
-)
+# Matches "OneView) 11.1" or "OneView) 11.01" in headings
+OV_HEADING_REGEX = re.compile(r"OneView\)\s*(\d+\.\d+)", re.IGNORECASE)
+# Generic version in table cells: "11.1", "10.2" etc.
+OV_TABLE_REGEX = re.compile(r"\bOneView\)\s*(\d+\.\d+)", re.IGNORECASE)
 
 def version_key(v: str) -> tuple:
-    """Sort versions numerically, supporting X.Y and X.YY.ZZ formats."""
     return tuple(int(x) for x in v.split("."))
 
-def fetch_from_github() -> tuple[str, str | None]:
+def fetch_latest_from_overview() -> str:
     """
-    Use GitHub Releases API — returns structured JSON with tag + published_at.
-    Tag names look like: '9.00.2406.3352', correlating to OneView 9.00, etc.
+    Parse the overview table. The first linked version under
+    'Recommended for latest fixes and features' is always the latest.
     """
-    headers = {"Accept": "application/vnd.github+json"}
-    r = requests.get(GITHUB_API, headers=headers, timeout=15)
-    r.raise_for_status()
-
-    releases = r.json()
-    if not releases:
-        raise RuntimeError("No releases found on GitHub.")
-
-    # Tags look like "9.00.2406.3352" — the first two segments are the OV version
-    versions_with_dates = []
-    for release in releases:
-        tag = release.get("tag_name", "")
-        published = release.get("published_at", "")  # ISO 8601, e.g. "2024-10-01T..."
-        # Extract major.minor from tag (e.g. "9.00" from "9.00.2406.3352")
-        match = re.match(r"^(\d{1,2}\.\d{2})", tag.lstrip("v"))
-        if match:
-            ov_version = match.group(1)
-            date_str = published[:10] if published else None  # "YYYY-MM-DD"
-            versions_with_dates.append((ov_version, date_str))
-
-    if not versions_with_dates:
-        raise RuntimeError("Could not parse any OneView versions from GitHub tags.")
-
-    latest_version, latest_date = sorted(
-        versions_with_dates, key=lambda x: version_key(x[0]), reverse=True
-    )[0]
-
-    return latest_version, latest_date
-
-def fetch_from_fallback() -> tuple[str, str | None]:
-    """Scrape HPE What's New page as a fallback."""
-    r = requests.get(FALLBACK_URL, timeout=40)
+    r = requests.get(OVERVIEW_URL, timeout=30)
     r.raise_for_status()
     soup = BeautifulSoup(r.text, "html.parser")
-    text = soup.get_text(" ", strip=True)
 
-    versions = VERSION_REGEX.findall(text)
+    # Find all links whose text matches "Composer (HPE OneView) X.Y"
+    versions = []
+    for a in soup.find_all("a"):
+        text = a.get_text(strip=True)
+        m = OV_TABLE_REGEX.search(text)
+        if m:
+            versions.append(m.group(1))
+
     if not versions:
-        raise RuntimeError("No versions found on fallback page.")
+        raise RuntimeError("No OneView versions found in overview table.")
 
-    # Filter to plausible OV versions only (between 6.x and 99.x)
-    versions = [v for v in versions if 6 <= int(v.split(".")[0]) <= 99]
-    latest_version = sorted(set(versions), key=version_key, reverse=True)[0]
+    # The table is ordered newest→oldest, so first entry = latest
+    # But also sort as a safety net in case page structure shifts
+    return sorted(set(versions), key=version_key, reverse=True)[0]
 
-    # Try to find the date closest to the latest version mention
-    release_date = None
-    dates = DATE_REGEX.findall(text)
-    if dates:
-        month, day, year = dates[0]
-        release_date = f"{year}-{datetime.datetime.strptime(month, '%B').month:02d}-{int(day):02d}"
+def fetch_latest_from_whatsnew() -> str:
+    """Fallback: scrape version from What's New headings."""
+    r = requests.get(WHATSNEW_URL, timeout=30)
+    r.raise_for_status()
+    soup = BeautifulSoup(r.text, "html.parser")
 
-    return latest_version, release_date
+    versions = []
+    for heading in soup.find_all(["h1", "h2", "h3"]):
+        m = OV_HEADING_REGEX.search(heading.get_text())
+        if m:
+            versions.append(m.group(1))
 
-def fetch_latest() -> tuple[str, str | None]:
-    """Try GitHub first, fall back to HTML scraping."""
+    if not versions:
+        raise RuntimeError("No OneView versions found in What's New page.")
+
+    return sorted(set(versions), key=version_key, reverse=True)[0]
+
+def fetch_latest() -> tuple[str, str]:
+    """Returns (version, iso_date). Date is always today — HPE doesn't publish it."""
     try:
-        version, date = fetch_from_github()
-        print(f"[GitHub] Version: {version}, Date: {date}")
-        return version, date
+        version = fetch_latest_from_overview()
+        print(f"[Overview] Latest version: {version}")
     except Exception as e:
-        print(f"[GitHub] Failed: {e}. Trying fallback...")
+        print(f"[Overview] Failed ({e}), trying What's New fallback...")
+        version = fetch_latest_from_whatsnew()
+        print(f"[Whats_New] Latest version: {version}")
 
-    version, date = fetch_from_fallback()
-    print(f"[Fallback] Version: {version}, Date: {date}")
-    return version, date
+    # HPE does not publish a machine-readable release date on these pages
+    today = datetime.date.today().isoformat()
+    return version, today
 
-def generate_rss(version: str, release_date: str | None) -> None:
-    now = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
-    pubdate = release_date or "Unknown release date"
-
+def generate_rss(version: str, check_date: str) -> None:
+    now_rfc = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
     rss = f"""<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
 <channel>
   <title>HPE OneView Latest Version</title>
-  <link>https://www.hpe.com</link>
+  <link>{OVERVIEW_URL}</link>
   <description>Daily feed of the newest HPE OneView release.</description>
-  <lastBuildDate>{now}</lastBuildDate>
+  <lastBuildDate>{now_rfc}</lastBuildDate>
   <item>
     <title>HPE OneView {version}</title>
-    <description>Latest HPE OneView version: {version}. Release date: {pubdate}.</description>
-    <link>https://github.com/HewlettPackard/POSH-HPEOneView/releases</link>
+    <description>Latest HPE OneView version: {version} (detected on {check_date}).</description>
+    <link>{OVERVIEW_URL}</link>
     <guid isPermaLink="false">oneview-{version}</guid>
-    <pubDate>{now}</pubDate>
+    <pubDate>{now_rfc}</pubDate>
   </item>
 </channel>
 </rss>
@@ -124,9 +105,9 @@ def generate_rss(version: str, release_date: str | None) -> None:
     print(f"RSS written to {RSS_FILE}")
 
 def main() -> None:
-    version, release_date = fetch_latest()
-    print(f"Latest OneView version: {version} (released: {release_date})")
-    generate_rss(version, release_date)
+    version, check_date = fetch_latest()
+    print(f"Latest HPE OneView: {version} (checked: {check_date})")
+    generate_rss(version, check_date)
 
 if __name__ == "__main__":
     main()

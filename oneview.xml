@@ -2,15 +2,15 @@
 <rss version="2.0">
 <channel>
   <title>HPE OneView Latest Version</title>
-  <link>https://www.hpe.com</link>
+  <link>https://support.hpe.com/docs/display/public/synergy-sw-release/index.html</link>
   <description>Daily feed of the newest HPE OneView release.</description>
-  <lastBuildDate>Tue, 03 Mar 2026 11:09:23 GMT</lastBuildDate>
+  <lastBuildDate>Tue, 03 Mar 2026 11:20:13 GMT</lastBuildDate>
   <item>
-    <title>HPE OneView 9.10</title>
-    <description>Latest HPE OneView version: 9.10. Release date: 2024-10-04.</description>
-    <link>https://github.com/HewlettPackard/POSH-HPEOneView/releases</link>
-    <guid isPermaLink="false">oneview-9.10</guid>
-    <pubDate>Tue, 03 Mar 2026 11:09:23 GMT</pubDate>
+    <title>HPE OneView 11.01</title>
+    <description>Latest HPE OneView version: 11.01 (detected on 2026-03-03).</description>
+    <link>https://support.hpe.com/docs/display/public/synergy-sw-release/index.html</link>
+    <guid isPermaLink="false">oneview-11.01</guid>
+    <pubDate>Tue, 03 Mar 2026 11:20:13 GMT</pubDate>
   </item>
 </channel>
 </rss>

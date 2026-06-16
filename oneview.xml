@@ -4,13 +4,13 @@
   <title>HPE OneView Latest Version</title>
   <link>https://support.hpe.com/docs/display/public/synergy-sw-release/index.html</link>
   <description>Daily feed of the newest HPE OneView release.</description>
-  <lastBuildDate>Mon, 15 Jun 2026 21:11:52 GMT</lastBuildDate>
+  <lastBuildDate>Tue, 16 Jun 2026 10:14:22 GMT</lastBuildDate>
   <item>
-    <title>HPE OneView 11.2</title>
-    <description>Latest HPE OneView version: 11.2 (detected on 2026-06-15).</description>
+    <title>HPE OneView 11.3</title>
+    <description>Latest HPE OneView version: 11.3 (detected on 2026-06-16).</description>
     <link>https://support.hpe.com/docs/display/public/synergy-sw-release/index.html</link>
-    <guid isPermaLink="false">oneview-11.2</guid>
-    <pubDate>Mon, 15 Jun 2026 21:11:52 GMT</pubDate>
+    <guid isPermaLink="false">oneview-11.3</guid>
+    <pubDate>Tue, 16 Jun 2026 10:14:22 GMT</pubDate>
   </item>
 </channel>
 </rss>
